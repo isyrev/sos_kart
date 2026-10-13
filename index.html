@@ -91,14 +91,13 @@
 </head>
 <body>
     <div class="header">
-        <h1>Генератор карт наблюдения</h1>
-        <p>Случайная заявка из подготовленных шаблонов</p>
+        <h1>Генератор SOS карт</h1>
+        <p>Твой помошник в написание SOSок</p>
     </div>
 
     <div class="btn-container">
         <button class="generate-btn" id="genBtn" onclick="generate()" disabled>Загрузка...</button>
     </div>
-    <div class="status" id="status">Загрузка заявок...</div>
 
     <div class="card" id="resultCard">
         <div class="field">
@@ -139,7 +138,6 @@
             </div>
             <div class="value" id="correction"></div>
         </div>
-        <button class="copy-all-btn" onclick="copyAll()">Скопировать всё</button>
         <div class="counter" id="counter"></div>
     </div>
 
@@ -341,7 +339,6 @@
                 data = json;
                 document.getElementById('genBtn').disabled = false;
                 document.getElementById('genBtn').textContent = 'Сгенерировать';
-                document.getElementById('status').textContent = `Загружено ${data.length} заявок`;
             })
             .catch(err => {
                 document.getElementById('status').textContent = 'Ошибка: ' + err.message + '. Проверьте, что файл data.json лежит рядом с index.html';
@@ -360,7 +357,6 @@
             document.getElementById('description').textContent = rephrase(item.description || '—');
             document.getElementById('correction').textContent = rephrase(item.correction || '—');
 
-            document.getElementById('counter').textContent = `Заявка из ${data.length}`;
             document.getElementById('resultCard').classList.add('visible');
         }
 
