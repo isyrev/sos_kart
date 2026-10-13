@@ -259,7 +259,6 @@
                 data = json;
                 document.getElementById('genBtn').disabled = false;
                 document.getElementById('genBtn').textContent = 'Сгенерировать';
-                document.getElementById('status').textContent = `Загружено ${data.length} заявок`;
             })
             .catch(err => {
                 document.getElementById('status').textContent = 'Ошибка: ' + err.message + '. Проверьте, что файл data.json лежит рядом с index.html';
