@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Генератор SOS карт</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <style>
         :root {
             --accent: #0078be;
@@ -366,7 +367,10 @@
             <div class="value" id="observed"></div>
         </div>
         <div class="field hidden" id="orgField">
-            <div class="label">Подрядная организация</div>
+            <div class="label-row">
+                <div class="label">Подрядная организация</div>
+                <button class="copy-mini" onclick="copyField('organization', this)">Копировать</button>
+            </div>
             <div class="value highlight" id="organization"></div>
         </div>
         <div class="field">
@@ -448,6 +452,7 @@
                 <div class="stat-label">За месяц</div>
             </div>
         </div>
+        <div class="stats-note">Общая статистика всех пользователей</div>
     </div>
 
     <script>
@@ -571,7 +576,6 @@
             const filtered = getFiltered();
             const season = getCurrentSeason();
             const modeLabel = filterMode === 'danger' ? 'опасных' : 'безопасных';
-        
         }
 
         const synonyms = {
