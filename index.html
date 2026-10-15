@@ -448,48 +448,80 @@
                 <div class="stat-label">За месяц</div>
             </div>
         </div>
-        <div class="stats-note">Считается на этом устройстве / в этом браузере</div>
     </div>
 
     <script>
         let data = [];
         let filterMode = 'safe';
 
-        const STATS_KEY = 'sos_generate_clicks';
+        // Глобальный счётчик через CountAPI (общий для всех устройств и пользователей)
+        // namespace уникальный для вашего сайта — не меняйте, иначе счётчик обнулится
+        const STATS_NS = 'tofsgroup-sos-generator';
 
-        function loadClicks() {
+        function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+        function getStatKeys() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = pad(now.getMonth() + 1);
+            const d = pad(now.getDate());
+            // неделя ISO-подобная: год + номер недели с понедельника
+            const day = now.getDay() || 7; // 1=пн … 7=вс
+            const thursday = new Date(now);
+            thursday.setDate(now.getDate() + 4 - day);
+            const yearStart = new Date(thursday.getFullYear(), 0, 1);
+            const weekNo = Math.ceil((((thursday - yearStart) / 86400000) + 1) / 7);
+            return {
+                day: 'day-' + y + '-' + m + '-' + d,
+                week: 'week-' + thursday.getFullYear() + '-W' + pad(weekNo),
+                month: 'month-' + y + '-' + m
+            };
+        }
+
+        async function countApi(action, key) {
+            // action: 'hit' (увеличить) или 'get' (прочитать)
+            const url = 'https://abacus.jasoncameron.dev/' + action + '/' + STATS_NS + '/' + key;
+            const r = await fetch(url);
+            if (!r.ok) throw new Error('counter ' + r.status);
+            const j = await r.json();
+            return typeof j.value === 'number' ? j.value : 0;
+        }
+
+        async function recordGenerateClick() {
+            const keys = getStatKeys();
             try {
-                const raw = localStorage.getItem(STATS_KEY);
-                return raw ? JSON.parse(raw) : [];
-            } catch (e) { return []; }
-        }
-        function saveClicks(arr) {
-            try { localStorage.setItem(STATS_KEY, JSON.stringify(arr)); } catch (e) {}
-        }
-        function recordGenerateClick() {
-            const clicks = loadClicks();
-            clicks.push(Date.now());
-            const cutoff = Date.now() - 400 * 24 * 60 * 60 * 1000;
-            saveClicks(clicks.filter(t => t >= cutoff));
+                // параллельно увеличиваем день / неделю / месяц
+                await Promise.all([
+                    countApi('hit', keys.day),
+                    countApi('hit', keys.week),
+                    countApi('hit', keys.month)
+                ]);
+            } catch (e) {
+                console.warn('Не удалось обновить глобальный счётчик:', e);
+            }
             updateStatsUI();
         }
-        function startOfDay(d) {
-            return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-        }
-        function startOfWeek(d) {
-            const day = d.getDay();
-            const diff = day === 0 ? 6 : day - 1;
-            return new Date(d.getFullYear(), d.getMonth(), d.getDate() - diff).getTime();
-        }
-        function startOfMonth(d) {
-            return new Date(d.getFullYear(), d.getMonth(), 1).getTime();
-        }
-        function updateStatsUI() {
-            const clicks = loadClicks();
-            const now = new Date();
-            document.getElementById('statDay').textContent = clicks.filter(t => t >= startOfDay(now)).length;
-            document.getElementById('statWeek').textContent = clicks.filter(t => t >= startOfWeek(now)).length;
-            document.getElementById('statMonth').textContent = clicks.filter(t => t >= startOfMonth(now)).length;
+
+        async function updateStatsUI() {
+            const keys = getStatKeys();
+            const dayEl = document.getElementById('statDay');
+            const weekEl = document.getElementById('statWeek');
+            const monthEl = document.getElementById('statMonth');
+            try {
+                const [day, week, month] = await Promise.all([
+                    countApi('get', keys.day),
+                    countApi('get', keys.week),
+                    countApi('get', keys.month)
+                ]);
+                dayEl.textContent = day;
+                weekEl.textContent = week;
+                monthEl.textContent = month;
+            } catch (e) {
+                dayEl.textContent = '—';
+                weekEl.textContent = '—';
+                monthEl.textContent = '—';
+                console.warn('Не удалось загрузить статистику:', e);
+            }
         }
 
         function getCurrentSeason() {
@@ -539,8 +571,7 @@
             const filtered = getFiltered();
             const season = getCurrentSeason();
             const modeLabel = filterMode === 'danger' ? 'опасных' : 'безопасных';
-            const el = document.getElementById('status');
-            if (el) el.textContent = 'Сезон: ' + seasonNames[season] + ' · Доступно ' + filtered.length + ' ' + modeLabel + ' заявок';
+        
         }
 
         const synonyms = {
