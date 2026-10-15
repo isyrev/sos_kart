@@ -18,9 +18,7 @@
             --text-dim: #64748b;
             --white: #ffffff;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             font-family: 'Comic Sans MS', system-ui, -apple-system, sans-serif;
             min-height: 100vh;
@@ -32,8 +30,6 @@
             position: relative;
             overflow-x: hidden;
         }
-
-        /* === Background photo (replace bg.jpg) === */
         .bg-photo {
             position: fixed;
             inset: 0;
@@ -48,8 +44,6 @@
             background: linear-gradient(160deg, #0b1220 0%, rgba(11,18,32,0.92) 40%, rgba(3,40,35,0.85) 100%);
             z-index: -1;
         }
-
-        /* === Header + Logo === */
         .header {
             text-align: center;
             margin-bottom: 28px;
@@ -74,15 +68,19 @@
             color: var(--text-muted);
             font-size: 0.95rem;
         }
-
-        /* === Filter buttons + Generate === */
         .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+        .filter-row {
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
             justify-content: center;
             align-items: center;
-            margin-bottom: 28px;
         }
         .filter-btn, .generate-btn {
             border: none;
@@ -131,7 +129,6 @@
             transform: none;
             filter: none;
         }
-
         .status {
             color: var(--text-muted);
             font-size: 0.88rem;
@@ -139,8 +136,6 @@
             text-align: center;
         }
         .status.error { color: #f87171; }
-
-        /* === Result card === */
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border);
@@ -158,7 +153,6 @@
             from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
         .field {
             margin-bottom: 16px;
             padding-bottom: 14px;
@@ -166,7 +160,6 @@
         }
         .field:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         .field.hidden { display: none; }
-
         .label-row {
             display: flex;
             align-items: center;
@@ -190,7 +183,6 @@
         .value.fixed { color: var(--text-muted); }
         .value.highlight { color: var(--accent); font-weight: 600; }
         .value.danger { color: #f87171; font-weight: 600; }
-
         .copy-mini {
             background: rgba(30, 41, 59, 0.9);
             color: var(--text-muted);
@@ -213,33 +205,12 @@
             border-color: var(--accent);
             color: var(--accent);
         }
-
         .counter {
             margin-top: 18px;
             font-size: 0.85rem;
             color: var(--text-dim);
             text-align: center;
         }
-        .copy-all-btn {
-            margin-top: 18px;
-            background: rgba(30, 41, 59, 0.9);
-            color: var(--text);
-            border: 1px solid var(--border);
-            padding: 10px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .copy-all-btn:hover {
-            background: var(--accent-dim);
-            border-color: var(--accent);
-            color: var(--white);
-        }
-
         .toast {
             position: fixed;
             bottom: 30px;
@@ -255,8 +226,6 @@
             box-shadow: 0 4px 20px var(--accent-glow);
         }
         .toast.show { opacity: 1; }
-
-        /* === Bottom link cards === */
         .links-section {
             margin-top: 56px;
             width: 100%;
@@ -312,33 +281,73 @@
             color: var(--text-dim);
             line-height: 1.35;
         }
-
+        .stats-section {
+            margin-top: 48px;
+            width: 100%;
+            max-width: 720px;
+            text-align: center;
+        }
+        .stats-title {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 14px;
+            font-weight: 600;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 12px;
+            backdrop-filter: blur(10px);
+        }
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1.2;
+        }
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        .stats-note {
+            margin-top: 12px;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
         @media (max-width: 520px) {
             .header h1 { font-size: 1.45rem; }
-            .controls { flex-direction: column; }
             .filter-btn, .generate-btn { width: 100%; max-width: 280px; }
+            .filter-row { width: 100%; flex-direction: column; align-items: center; }
             .card { padding: 20px 18px; }
+            .stats-grid { grid-template-columns: 1fr; max-width: 240px; margin: 0 auto; }
         }
     </style>
 </head>
 <body>
-    <!-- Background: put your photo as bg.jpg next to index.html -->
     <div class="bg-photo"></div>
     <div class="bg-overlay"></div>
-
     <div class="header">
-        <!-- Logo: put your logo as logo.png next to index.html -->
         <img class="logo" src="logo.png" alt="Логотип" onerror="this.style.display='none'">
         <h1>Генератор SOS карт</h1>
         <p>Твой помощник в написании SOSок</p>
     </div>
-
     <div class="controls">
-        <button class="filter-btn active" id="btnSafe" onclick="setFilter('safe')">Безопасные</button>
-        <button class="filter-btn" id="btnDanger" onclick="setFilter('danger')">Опасные</button>
+        <div class="filter-row">
+            <button class="filter-btn active" id="btnSafe" onclick="setFilter('safe')">Безопасные</button>
+            <button class="filter-btn" id="btnDanger" onclick="setFilter('danger')">Опасные</button>
+        </div>
         <button class="generate-btn" id="genBtn" onclick="generate()" disabled>Загрузка...</button>
     </div>
-
+    <div class="status" id="status"></div>
     <div class="card" id="resultCard">
         <div class="field">
             <div class="label">Город наблюдения</div>
@@ -356,7 +365,6 @@
             <div class="label">Наблюдали в отношении</div>
             <div class="value" id="observed"></div>
         </div>
-        <!-- Показывается только если Подрядная организация -->
         <div class="field hidden" id="orgField">
             <div class="label">Подрядная организация</div>
             <div class="value highlight" id="organization"></div>
@@ -369,7 +377,6 @@
             <div class="label">Выберите заказчика</div>
             <div class="value fixed">ООО «РН-Юганскнефтегаз»</div>
         </div>
-        <!-- Показывается только при Опасных -->
         <div class="field hidden" id="stopField">
             <div class="label">Работы остановлены?</div>
             <div class="value" id="stop"></div>
@@ -390,15 +397,7 @@
         </div>
         <div class="counter" id="counter"></div>
     </div>
-
     <div class="toast" id="toast">Скопировано!</div>
-
-    <!-- === 4 карточки ссылок на сайты компании ===
-         Чтобы настроить:
-         1. Поменяйте href="..." на нужную ссылку
-         2. Положите скриншот как card1.jpg, card2.jpg, card3.jpg, card4.jpg
-         3. Измените название и описание
-    -->
     <div class="links-section">
         <div class="links-title">Рабочие сайты</div>
         <div class="links-grid">
@@ -433,35 +432,84 @@
         </div>
     </div>
 
+    <div class="stats-section">
+        <div class="stats-title">Статистика генераций</div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="statDay">0</div>
+                <div class="stat-label">За сегодня</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statWeek">0</div>
+                <div class="stat-label">За неделю</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statMonth">0</div>
+                <div class="stat-label">За месяц</div>
+            </div>
+        </div>
+        <div class="stats-note">Считается на этом устройстве / в этом браузере</div>
+    </div>
+
     <script>
         let data = [];
-        let filterMode = 'safe'; // 'safe' | 'danger'
+        let filterMode = 'safe';
 
-        // Текущий сезон: 1-зима, 2-весна, 3-лето, 4-осень
+        const STATS_KEY = 'sos_generate_clicks';
+
+        function loadClicks() {
+            try {
+                const raw = localStorage.getItem(STATS_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) { return []; }
+        }
+        function saveClicks(arr) {
+            try { localStorage.setItem(STATS_KEY, JSON.stringify(arr)); } catch (e) {}
+        }
+        function recordGenerateClick() {
+            const clicks = loadClicks();
+            clicks.push(Date.now());
+            const cutoff = Date.now() - 400 * 24 * 60 * 60 * 1000;
+            saveClicks(clicks.filter(t => t >= cutoff));
+            updateStatsUI();
+        }
+        function startOfDay(d) {
+            return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+        }
+        function startOfWeek(d) {
+            const day = d.getDay();
+            const diff = day === 0 ? 6 : day - 1;
+            return new Date(d.getFullYear(), d.getMonth(), d.getDate() - diff).getTime();
+        }
+        function startOfMonth(d) {
+            return new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+        }
+        function updateStatsUI() {
+            const clicks = loadClicks();
+            const now = new Date();
+            document.getElementById('statDay').textContent = clicks.filter(t => t >= startOfDay(now)).length;
+            document.getElementById('statWeek').textContent = clicks.filter(t => t >= startOfWeek(now)).length;
+            document.getElementById('statMonth').textContent = clicks.filter(t => t >= startOfMonth(now)).length;
+        }
+
         function getCurrentSeason() {
-            const m = new Date().getMonth() + 1; // 1-12
+            const m = new Date().getMonth() + 1;
             if (m === 12 || m <= 2) return '1';
             if (m >= 3 && m <= 5) return '2';
             if (m >= 6 && m <= 8) return '3';
-            return '4'; // 9-11 осень
+            return '4';
         }
-
         const seasonNames = { '1': 'Зима', '2': 'Весна', '3': 'Лето', '4': 'Осень' };
-
         function isSeasonMatch(itemSeason, current) {
             if (!itemSeason || itemSeason === 'all') return true;
-            // поддержка "1,4" или массива
             const parts = String(itemSeason).split(/[,;\s]+/).map(s => s.trim()).filter(Boolean);
             return parts.includes(current);
         }
-
         function isDangerous(action) {
             const a = (action || '').toLowerCase();
-            // «безопасные» содержит подстроку «опасн» — исключаем безопасные явно
             if (a.includes('безопасн')) return false;
             return a.includes('опасн');
         }
-
         function setFilter(mode) {
             filterMode = mode;
             const btnSafe = document.getElementById('btnSafe');
@@ -479,7 +527,6 @@
             }
             updateStatus();
         }
-
         function getFiltered() {
             const season = getCurrentSeason();
             return data.filter(item => {
@@ -488,15 +535,14 @@
                 return filterMode === 'danger' ? danger : !danger;
             });
         }
-
         function updateStatus() {
             const filtered = getFiltered();
             const season = getCurrentSeason();
             const modeLabel = filterMode === 'danger' ? 'опасных' : 'безопасных';
-
+            const el = document.getElementById('status');
+            if (el) el.textContent = 'Сезон: ' + seasonNames[season] + ' · Доступно ' + filtered.length + ' ' + modeLabel + ' заявок';
         }
 
-        // ===================== ВАРИАЦИИ ТЕКСТА =====================
         const synonyms = {
             "обнаружил": ["заметил", "выявил", "зафиксировал", "увидел"],
             "обнаружила": ["заметила", "выявила", "зафиксировала", "увидела"],
@@ -541,25 +587,16 @@
             "коллега": ["сотрудник", "работник", "напарник"],
             "коллеги": ["сотрудники", "работники", "напарники"],
         };
-
         const phraseVariants = {
-            "нет нареканий по работе": [
-                "Нареканий по работе нет", "Претензий к работе нет",
-                "Работа выполнена без замечаний", "Замечаний и нареканий нет"
-            ],
-            "Нет нареканий по работе": [
-                "Нареканий по работе нет", "Претензий к работе нет",
-                "Работа выполнена без замечаний", "Замечаний нет"
-            ],
+            "нет нареканий по работе": ["Нареканий по работе нет", "Претензий к работе нет", "Работа выполнена без замечаний", "Замечаний и нареканий нет"],
+            "Нет нареканий по работе": ["Нареканий по работе нет", "Претензий к работе нет", "Работа выполнена без замечаний", "Замечаний нет"],
             "нет нареканий": ["Нареканий нет", "Претензий нет", "Замечаний нет"],
             "Нет нареканий": ["Нареканий нет", "Претензий нет", "Замечаний нет"],
             "Не требуются": ["Корректирующие действия не требуются", "Дополнительных мер не требуется", "Меры не требуются"],
             "не требуются": ["Корректирующие действия не требуются", "Дополнительных мер не требуется"],
             "Корректирующие действия не требуются": ["Дополнительных мер не требуется", "Меры не требуются", "Корректировка не нужна"],
         };
-
         function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-
         function rephrase(text) {
             if (!text || text.trim() === '' || text === '—') return text;
             let result = text.trim();
@@ -583,7 +620,8 @@
             return result;
         }
 
-        // ===================== ЗАГРУЗКА =====================
+        updateStatsUI();
+
         fetch('data.json')
             .then(r => {
                 if (!r.ok) throw new Error('Не удалось загрузить data.json');
@@ -594,10 +632,14 @@
                 document.getElementById('genBtn').disabled = false;
                 document.getElementById('genBtn').textContent = 'Сгенерировать';
                 setFilter('safe');
+                updateStatsUI();
             })
             .catch(err => {
-                document.getElementById('status').textContent = 'Ошибка: ' + err.message;
-                document.getElementById('status').classList.add('error');
+                const el = document.getElementById('status');
+                if (el) {
+                    el.textContent = 'Ошибка: ' + err.message;
+                    el.classList.add('error');
+                }
                 document.getElementById('genBtn').textContent = 'Ошибка загрузки';
             });
 
@@ -609,20 +651,14 @@
             }
             const item = filtered[Math.floor(Math.random() * filtered.length)];
             const danger = isDangerous(item.action);
-
             const actionEl = document.getElementById('action');
             actionEl.textContent = item.action || '—';
             actionEl.className = 'value ' + (danger ? 'danger' : 'highlight');
-
             document.getElementById('category').textContent = item.category || '—';
             document.getElementById('description').textContent = rephrase(item.description || '—');
             document.getElementById('correction').textContent = rephrase(item.correction || '—');
-
-            // Наблюдали в отношении
             const observed = item.observed_in_relation_to || item['observed in relation to'] || 'Группа компаний Технологии ОФС';
             document.getElementById('observed').textContent = observed;
-
-            // Подрядная организация
             const orgField = document.getElementById('orgField');
             const org = (item.organization || '').trim();
             if (observed.toLowerCase().includes('подрядн') && org) {
@@ -631,8 +667,6 @@
             } else {
                 orgField.classList.add('hidden');
             }
-
-            // Работы остановлены?
             const stopField = document.getElementById('stopField');
             if (danger) {
                 const stopVal = (item.Stop || item.stop || '').trim() || '—';
@@ -643,8 +677,8 @@
                 stopField.classList.add('hidden');
             }
             document.getElementById('resultCard').classList.add('visible');
+            recordGenerateClick();
         }
-
         function copyField(id, btn) {
             const text = document.getElementById(id).textContent;
             navigator.clipboard.writeText(text).then(() => {
@@ -655,33 +689,6 @@
                     btn.textContent = original;
                     btn.classList.remove('copied');
                 }, 1500);
-            });
-        }
-
-        function copyAll() {
-            const orgField = document.getElementById('orgField');
-            const stopField = document.getElementById('stopField');
-            let lines = [
-                'Город наблюдения: г. Нефтеюганск',
-                'Опасные/безопасные действия или условия: ' + document.getElementById('action').textContent,
-                'Место наблюдения: Месторождение (Field)',
-                'Наблюдали в отношении: ' + document.getElementById('observed').textContent,
-            ];
-            if (!orgField.classList.contains('hidden')) {
-                lines.push('Подрядная организация: ' + document.getElementById('organization').textContent);
-            }
-            lines.push('Категория: ' + document.getElementById('category').textContent);
-            lines.push('Выберите заказчика: ООО «РН-Юганскнефтегаз»');
-            if (!stopField.classList.contains('hidden')) {
-                lines.push('Работы остановлены?: ' + document.getElementById('stop').textContent);
-            }
-            lines.push('Опишите наблюдение: ' + document.getElementById('description').textContent);
-            lines.push('Корректирующие действия: ' + document.getElementById('correction').textContent);
-
-            navigator.clipboard.writeText(lines.join('\n')).then(() => {
-                const toast = document.getElementById('toast');
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 2000);
             });
         }
     </script>
