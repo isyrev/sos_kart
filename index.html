@@ -5,97 +5,337 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Генератор SOS карт</title>
     <style>
+        :root {
+            --accent: #0078be;
+            --accent-hover: #00dbaf;
+            --accent-dim: rgba(3, 190, 147, 0.25);
+            --accent-glow: rgba(3, 190, 147, 0.4);
+            --bg-dark: #0b1220;
+            --card-bg: rgba(15, 23, 42, 0.88);
+            --border: rgba(3, 190, 147, 0.2);
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --white: #ffffff;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            font-family: 'Comic Sans MS', system-ui, -apple-system, sans-serif;
             min-height: 100vh;
-            color: #e2e8f0;
+            color: var(--text);
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
+            padding: 24px 16px 48px;
+            position: relative;
+            overflow-x: hidden;
         }
-        .header { text-align: center; margin-bottom: 30px; padding-top: 20px; }
-        .header h1 { font-size: 1.8rem; font-weight: 600; color: #f8fafc; margin-bottom: 8px; }
-        .header p { color: #94a3b8; font-size: 0.95rem; }
-        .btn-container { margin: 20px 0 30px; }
+
+        /* === Background photo (replace bg.jpg) === */
+        .bg-photo {
+            position: fixed;
+            inset: 0;
+            background: url('bg.jpg') center/cover no-repeat;
+            filter: blur(8px) brightness(0.35);
+            transform: scale(1.05);
+            z-index: -2;
+        }
+        .bg-overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(160deg, #0b1220 0%, rgba(11,18,32,0.92) 40%, rgba(3,40,35,0.85) 100%);
+            z-index: -1;
+        }
+
+        /* === Header + Logo === */
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+            padding-top: 12px;
+        }
+        .logo {
+            width: 120px;
+            height: auto;
+            max-height: 72px;
+            object-fit: contain;
+            margin-bottom: 14px;
+            filter: drop-shadow(0 2px 8px rgba(3,190,147,0.3));
+        }
+        .header h1 {
+            font-size: 1.85rem;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 6px;
+            letter-spacing: -0.02em;
+        }
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* === Filter buttons + Generate === */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+        .filter-btn, .generate-btn {
+            border: none;
+            padding: 14px 28px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 0.3px;
+        }
+        .filter-btn {
+            background: rgba(30, 41, 59, 0.8);
+            color: var(--text-muted);
+            border: 1px solid rgba(100, 116, 139, 0.4);
+        }
+        .filter-btn:hover {
+            border-color: var(--accent);
+            color: var(--white);
+        }
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            color: var(--white);
+            border-color: transparent;
+            box-shadow: 0 4px 18px var(--accent-glow);
+        }
+        .filter-btn.dimmed {
+            opacity: 0.4;
+        }
         .generate-btn {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: white; border: none; padding: 18px 48px;
-            font-size: 1.25rem; font-weight: 600; border-radius: 12px;
-            cursor: pointer; box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
-            transition: all 0.2s ease; letter-spacing: 0.5px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            color: var(--white);
+            box-shadow: 0 4px 20px var(--accent-glow);
+            padding: 16px 40px;
+            font-size: 1.15rem;
         }
         .generate-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(59, 130, 246, 0.5);
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            box-shadow: 0 6px 28px var(--accent-glow);
+            filter: brightness(1.08);
         }
         .generate-btn:active { transform: translateY(0); }
-        .generate-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .generate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            filter: none;
+        }
+
+        .status {
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .status.error { color: #f87171; }
+
+        /* === Result card === */
         .card {
-            background: #1e293b; border: 1px solid #334155; border-radius: 16px;
-            padding: 28px 32px; max-width: 720px; width: 100%;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            display: none; animation: fadeIn 0.35s ease;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px 32px;
+            max-width: 720px;
+            width: 100%;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+            display: none;
+            animation: fadeIn 0.35s ease;
+            backdrop-filter: blur(12px);
         }
         .card.visible { display: block; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
         .field {
-            margin-bottom: 18px; padding-bottom: 14px;
-            border-bottom: 1px solid #334155;
+            margin-bottom: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.6);
         }
         .field:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .field.hidden { display: none; }
+
         .label-row {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 6px; gap: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            gap: 10px;
         }
         .label {
-            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.6px;
-            color: #64748b; font-weight: 500;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            color: var(--text-dim);
+            font-weight: 600;
         }
         .value {
-            font-size: 1.05rem; color: #f1f5f9; line-height: 1.5;
+            font-size: 1.05rem;
+            color: var(--text);
+            line-height: 1.5;
             word-wrap: break-word;
         }
-        .value.fixed { color: #94a3b8; }
-        .value.highlight { color: #60a5fa; font-weight: 500; }
+        .value.fixed { color: var(--text-muted); }
+        .value.highlight { color: var(--accent); font-weight: 600; }
+        .value.danger { color: #f87171; font-weight: 600; }
+
         .copy-mini {
-            background: #334155; color: #94a3b8; border: 1px solid #475569;
-            padding: 4px 12px; border-radius: 6px; cursor: pointer;
-            font-size: 0.75rem; white-space: nowrap; transition: all 0.15s; flex-shrink: 0;
+            background: rgba(30, 41, 59, 0.9);
+            color: var(--text-muted);
+            border: 1px solid rgba(100, 116, 139, 0.5);
+            padding: 4px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            transition: all 0.15s;
+            flex-shrink: 0;
         }
-        .copy-mini:hover { background: #475569; color: #e2e8f0; }
-        .copy-mini.copied { background: #166534; border-color: #22c55e; color: #86efac; }
-        .counter { margin-top: 20px; font-size: 0.85rem; color: #64748b; text-align: center; }
+        .copy-mini:hover {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: var(--white);
+        }
+        .copy-mini.copied {
+            background: rgba(3, 190, 147, 0.25);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .counter {
+            margin-top: 18px;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            text-align: center;
+        }
         .copy-all-btn {
-            margin-top: 20px; background: #334155; color: #e2e8f0;
-            border: 1px solid #475569; padding: 10px 24px; border-radius: 8px;
-            cursor: pointer; font-size: 0.9rem; transition: background 0.2s;
-            display: block; margin-left: auto; margin-right: auto;
+            margin-top: 18px;
+            background: rgba(30, 41, 59, 0.9);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
-        .copy-all-btn:hover { background: #475569; }
+        .copy-all-btn:hover {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+            color: var(--white);
+        }
+
         .toast {
-            position: fixed; bottom: 30px; background: #22c55e; color: white;
-            padding: 12px 24px; border-radius: 8px; font-weight: 500;
-            opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100;
+            position: fixed;
+            bottom: 30px;
+            background: var(--accent);
+            color: var(--white);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 100;
+            box-shadow: 0 4px 20px var(--accent-glow);
         }
         .toast.show { opacity: 1; }
-        .status { color: #94a3b8; font-size: 0.9rem; margin-top: 10px; text-align: center; }
-        .status.error { color: #f87171; }
+
+        /* === Bottom link cards === */
+        .links-section {
+            margin-top: 56px;
+            width: 100%;
+            max-width: 960px;
+        }
+        .links-title {
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .link-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+        }
+        .link-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+            box-shadow: 0 8px 28px var(--accent-glow);
+        }
+        .link-card img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            background: #1e293b;
+            display: block;
+        }
+        .link-card .link-body {
+            padding: 14px 16px;
+        }
+        .link-card .link-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--white);
+            margin-bottom: 4px;
+        }
+        .link-card .link-desc {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            line-height: 1.35;
+        }
+
+        @media (max-width: 520px) {
+            .header h1 { font-size: 1.45rem; }
+            .controls { flex-direction: column; }
+            .filter-btn, .generate-btn { width: 100%; max-width: 280px; }
+            .card { padding: 20px 18px; }
+        }
     </style>
 </head>
 <body>
+    <!-- Background: put your photo as bg.jpg next to index.html -->
+    <div class="bg-photo"></div>
+    <div class="bg-overlay"></div>
+
     <div class="header">
+        <!-- Logo: put your logo as logo.png next to index.html -->
+        <img class="logo" src="logo.png" alt="Логотип" onerror="this.style.display='none'">
         <h1>Генератор SOS карт</h1>
-        <p>Твой помошник в написание SOSок</p>
+        <p>Твой помощник в написании SOSок</p>
     </div>
 
-    <div class="btn-container">
+    <div class="controls">
+        <button class="filter-btn active" id="btnSafe" onclick="setFilter('safe')">Безопасные</button>
+        <button class="filter-btn" id="btnDanger" onclick="setFilter('danger')">Опасные</button>
         <button class="generate-btn" id="genBtn" onclick="generate()" disabled>Загрузка...</button>
     </div>
 
@@ -114,7 +354,12 @@
         </div>
         <div class="field">
             <div class="label">Наблюдали в отношении</div>
-            <div class="value fixed">Группа компаний Технологии ОФС</div>
+            <div class="value" id="observed"></div>
+        </div>
+        <!-- Показывается только если Подрядная организация -->
+        <div class="field hidden" id="orgField">
+            <div class="label">Подрядная организация</div>
+            <div class="value highlight" id="organization"></div>
         </div>
         <div class="field">
             <div class="label">Категория</div>
@@ -123,6 +368,11 @@
         <div class="field">
             <div class="label">Выберите заказчика</div>
             <div class="value fixed">ООО «РН-Юганскнефтегаз»</div>
+        </div>
+        <!-- Показывается только при Опасных -->
+        <div class="field hidden" id="stopField">
+            <div class="label">Работы остановлены?</div>
+            <div class="value" id="stop"></div>
         </div>
         <div class="field">
             <div class="label-row">
@@ -143,14 +393,111 @@
 
     <div class="toast" id="toast">Скопировано!</div>
 
+    <!-- === 4 карточки ссылок на сайты компании ===
+         Чтобы настроить:
+         1. Поменяйте href="..." на нужную ссылку
+         2. Положите скриншот как card1.jpg, card2.jpg, card3.jpg, card4.jpg
+         3. Измените название и описание
+    -->
+    <div class="links-section">
+        <div class="links-title">Рабочие сайты</div>
+        <div class="links-grid">
+            <a class="link-card" href="https://lk.tofsgroup.ru/" target="_blank" rel="noopener">
+                <img src="card1.jpg" alt="" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22200%22%3E%3Crect fill=%22%231e293b%22 width=%22400%22 height=%22200%22/%3E%3Ctext fill=%22%2364748b%22 font-family=%22sans-serif%22 font-size=%2218%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3EСкрин сайта%3C/text%3E%3C/svg%3E'">
+                <div class="link-body">
+                    <div class="link-name">iConnect</div>
+                    <div class="link-desc"></div>
+                </div>
+            </a>
+            <a class="link-card" href="https://networking.tofsgroup.ru" target="_blank" rel="noopener">
+                <img src="card2.jpg" alt="" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22200%22%3E%3Crect fill=%22%231e293b%22 width=%22400%22 height=%22200%22/%3E%3Ctext fill=%22%2364748b%22 font-family=%22sans-serif%22 font-size=%2218%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3EСкрин сайта%3C/text%3E%3C/svg%3E'">
+                <div class="link-body">
+                    <div class="link-name">Нетворкинг</div>
+                    <div class="link-desc"></div>
+                </div>
+            </a>
+            <a class="link-card" href="https://library.tofsgroup.ru/main/company-docs/" target="_blank" rel="noopener">
+                <img src="card3.jpg" alt="" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22200%22%3E%3Crect fill=%22%231e293b%22 width=%22400%22 height=%22200%22/%3E%3Ctext fill=%22%2364748b%22 font-family=%22sans-serif%22 font-size=%2218%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3EСкрин сайта%3C/text%3E%3C/svg%3E'">
+                <div class="link-body">
+                    <div class="link-name">LiBRARY</div>
+                    <div class="link-desc"></div>
+                </div>
+            </a>
+            <a class="link-card" href="https://obt.continent.ru/" target="_blank" rel="noopener">
+                <img src="card4.jpg" alt="" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22200%22%3E%3Crect fill=%22%231e293b%22 width=%22400%22 height=%22200%22/%3E%3Ctext fill=%22%2364748b%22 font-family=%22sans-serif%22 font-size=%2218%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3EСкрин сайта%3C/text%3E%3C/svg%3E'">
+                <div class="link-body">
+                    <div class="link-name">Continent</div>
+                    <div class="link-desc"></div>
+                </div>
+            </a>
+        </div>
+    </div>
+
     <script>
         let data = [];
+        let filterMode = 'safe'; // 'safe' | 'danger'
 
-        // ===================== СИСТЕМА ВАРИАЦИЙ =====================
-        // Словари синонимов и альтернативных фраз (русский язык, тематика ОТ и ТБ)
+        // Текущий сезон: 1-зима, 2-весна, 3-лето, 4-осень
+        function getCurrentSeason() {
+            const m = new Date().getMonth() + 1; // 1-12
+            if (m === 12 || m <= 2) return '1';
+            if (m >= 3 && m <= 5) return '2';
+            if (m >= 6 && m <= 8) return '3';
+            return '4'; // 9-11 осень
+        }
 
+        const seasonNames = { '1': 'Зима', '2': 'Весна', '3': 'Лето', '4': 'Осень' };
+
+        function isSeasonMatch(itemSeason, current) {
+            if (!itemSeason || itemSeason === 'all') return true;
+            // поддержка "1,4" или массива
+            const parts = String(itemSeason).split(/[,;\s]+/).map(s => s.trim()).filter(Boolean);
+            return parts.includes(current);
+        }
+
+        function isDangerous(action) {
+            const a = (action || '').toLowerCase();
+            // «безопасные» содержит подстроку «опасн» — исключаем безопасные явно
+            if (a.includes('безопасн')) return false;
+            return a.includes('опасн');
+        }
+
+        function setFilter(mode) {
+            filterMode = mode;
+            const btnSafe = document.getElementById('btnSafe');
+            const btnDanger = document.getElementById('btnDanger');
+            if (mode === 'safe') {
+                btnSafe.classList.add('active');
+                btnSafe.classList.remove('dimmed');
+                btnDanger.classList.remove('active');
+                btnDanger.classList.add('dimmed');
+            } else {
+                btnDanger.classList.add('active');
+                btnDanger.classList.remove('dimmed');
+                btnSafe.classList.remove('active');
+                btnSafe.classList.add('dimmed');
+            }
+            updateStatus();
+        }
+
+        function getFiltered() {
+            const season = getCurrentSeason();
+            return data.filter(item => {
+                if (!isSeasonMatch(item.season, season)) return false;
+                const danger = isDangerous(item.action);
+                return filterMode === 'danger' ? danger : !danger;
+            });
+        }
+
+        function updateStatus() {
+            const filtered = getFiltered();
+            const season = getCurrentSeason();
+            const modeLabel = filterMode === 'danger' ? 'опасных' : 'безопасных';
+
+        }
+
+        // ===================== ВАРИАЦИИ ТЕКСТА =====================
         const synonyms = {
-            // Глаголы
             "обнаружил": ["заметил", "выявил", "зафиксировал", "увидел"],
             "обнаружила": ["заметила", "выявила", "зафиксировала", "увидела"],
             "заметил": ["обнаружил", "увидел", "выявил", "зафиксировал"],
@@ -163,8 +510,6 @@
             "сообщила": ["доложила", "сказала", "проинформировала", "довела до сведения"],
             "доложил": ["сообщил", "довёл до сведения", "проинформировал"],
             "доложила": ["сообщила", "довела до сведения", "проинформировала"],
-            "проинформировал": ["сообщил", "уведомил", "доложил"],
-            "проинформировала": ["сообщила", "уведомила", "доложила"],
             "сделал замечание": ["сделал устное замечание", "указал на нарушение", "провёл беседу", "обратил внимание"],
             "сделала замечание": ["сделала устное замечание", "указала на нарушение", "провела беседу", "обратила внимание"],
             "провёл беседу": ["провёл разъяснительную беседу", "провёл инструктаж", "сделал замечание"],
@@ -179,157 +524,66 @@
             "собрала": ["собрала и утилизировала", "убрала", "собрала в контейнер"],
             "провёл проверку": ["осуществил проверку", "провёл осмотр", "проверил"],
             "провела проверку": ["осуществила проверку", "провела осмотр", "проверила"],
-            "провёл осмотр": ["осуществил осмотр", "провёл проверку", "осмотрел"],
-            "провела осмотр": ["осуществила осмотр", "провела проверку", "осмотрела"],
-
-            // Существительные и устойчивые выражения
-            "нарушений не обнаружено": ["замечаний нет", "нарушений не выявлено", "всё в порядке", "отклонений не установлено"],
+            "нарушений не обнаружено": ["замечаний нет", "нарушений не выявлено", "всё в порядке"],
             "нарушений не выявлено": ["нарушений не обнаружено", "замечаний нет", "всё в норме"],
-            "нет нареканий": ["нареканий нет", "претензий нет", "замечаний нет", "работа выполнена качественно"],
+            "нет нареканий": ["нареканий нет", "претензий нет", "замечаний нет"],
             "нареканий нет": ["нет нареканий", "претензий нет", "замечаний нет"],
-            "претензий нет": ["нет претензий", "нареканий нет", "замечаний нет"],
-            "доволен работой": ["работа выполнена качественно", "оценка положительная", "нареканий нет", "работа устраивает"],
-            "довольна работой": ["работа выполнена качественно", "оценка положительная", "нареканий нет", "работа устраивает"],
-            "работа безопасна": ["безопасность соблюдена", "условия безопасны", "работа выполнена безопасно"],
-            "СИЗ соблюдены": ["средства защиты надеты", "СИЗ использованы", "соблюдены требования по СИЗ"],
-            "согласно ТБ": ["в соответствии с требованиями ТБ", "с соблюдением техники безопасности", "по правилам ТБ"],
-            "согласно правилам": ["в соответствии с правилами", "по установленным правилам", "с соблюдением регламента"],
+            "доволен работой": ["работа выполнена качественно", "нареканий нет", "работа устраивает"],
+            "довольна работой": ["работа выполнена качественно", "нареканий нет", "работа устраивает"],
             "доведено до мастера": ["информация передана мастеру", "мастер уведомлён", "доложено мастеру"],
-            "доведено до начальника": ["информация передана начальнику", "начальник уведомлён", "доложено начальнику"],
             "сломан": ["вышел из строя", "неисправен", "пришёл в негодность"],
             "сломалась": ["вышла из строя", "неисправна", "пришла в негодность"],
             "сломалось": ["вышло из строя", "неисправно", "пришло в негодность"],
-            "износ": ["изношенность", "изношенный", "стёртость"],
             "износились": ["пришли в негодность", "изношены", "вышли из строя"],
             "износился": ["пришёл в негодность", "изношен", "вышел из строя"],
-            "перегорела": ["вышла из строя", "перегорела", "не работает"],
-            "перегорела лампочка": ["вышла из строя лампа", "перегорела лампа освещения", "не работает освещение"],
-            "перегорела лампа": ["вышла из строя лампа", "перегорела лампочка", "не работает освещение"],
-            "на территории базы": ["на территории", "на базе", "в пределах территории"],
-            "на кустовой площадке": ["на кусту", "на площадке", "на кустовой"],
-            "в цеху комплектации": ["в цехе комплектации", "на участке комплектации", "в комплектации"],
             "электромонтёр": ["электромонтер", "сотрудник", "работник"],
             "электромонтёры": ["электромонтеры", "сотрудники", "работники"],
             "коллега": ["сотрудник", "работник", "напарник"],
             "коллеги": ["сотрудники", "работники", "напарники"],
-            "мастер": ["руководитель", "мастер участка", "непосредственный руководитель"],
-            "начальник участка": ["руководитель участка", "начальник", "руководство"],
-            "начальник смены": ["руководитель смены", "начальник", "сменный руководитель"],
         };
 
-        // Альтернативные формулировки для очень частых коротких фраз
         const phraseVariants = {
             "нет нареканий по работе": [
-                "Нареканий по работе нет",
-                "Претензий к работе нет",
-                "Работа выполнена без замечаний",
-                "Замечаний и нареканий нет",
-                "К работе претензий не имеется",
-                "Работа соответствует требованиям"
+                "Нареканий по работе нет", "Претензий к работе нет",
+                "Работа выполнена без замечаний", "Замечаний и нареканий нет"
             ],
             "Нет нареканий по работе": [
-                "Нареканий по работе нет",
-                "Претензий к работе нет",
-                "Работа выполнена без замечаний",
-                "Замечаний нет",
-                "К работе претензий не имеется"
+                "Нареканий по работе нет", "Претензий к работе нет",
+                "Работа выполнена без замечаний", "Замечаний нет"
             ],
-            "нет нареканий": [
-                "Нареканий нет",
-                "Претензий нет",
-                "Замечаний нет",
-                "Всё в порядке"
-            ],
-            "Нет нареканий": [
-                "Нареканий нет",
-                "Претензий нет",
-                "Замечаний нет"
-            ],
-            "Не требуются": [
-                "Корректирующие действия не требуются",
-                "Дополнительных мер не требуется",
-                "Действия не нужны",
-                "Меры не требуются"
-            ],
-            "не требуются": [
-                "Корректирующие действия не требуются",
-                "Дополнительных мер не требуется",
-                "Действия не нужны"
-            ],
-            "Корректирующие действия не требуются": [
-                "Дополнительных мер не требуется",
-                "Действия не нужны",
-                "Меры не требуются",
-                "Корректировка не нужна"
-            ],
+            "нет нареканий": ["Нареканий нет", "Претензий нет", "Замечаний нет"],
+            "Нет нареканий": ["Нареканий нет", "Претензий нет", "Замечаний нет"],
+            "Не требуются": ["Корректирующие действия не требуются", "Дополнительных мер не требуется", "Меры не требуются"],
+            "не требуются": ["Корректирующие действия не требуются", "Дополнительных мер не требуется"],
+            "Корректирующие действия не требуются": ["Дополнительных мер не требуется", "Меры не требуются", "Корректировка не нужна"],
         };
 
-        function pick(arr) {
-            return arr[Math.floor(Math.random() * arr.length)];
-        }
+        function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
         function rephrase(text) {
             if (!text || text.trim() === '' || text === '—') return text;
-
             let result = text.trim();
-
-            // 1. Точное совпадение с частыми фразами
-            if (phraseVariants[result]) {
-                return pick(phraseVariants[result]);
-            }
-
-            // 2. Замена по словарю синонимов (с учётом регистра)
-            // Сортируем ключи по длине (длинные фразы сначала)
+            if (phraseVariants[result]) return pick(phraseVariants[result]);
             const keys = Object.keys(synonyms).sort((a, b) => b.length - a.length);
-
             for (const key of keys) {
-                // Ищем вхождение (регистронезависимо для начала)
                 const regex = new RegExp(key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-                if (regex.test(result)) {
-                    // С вероятностью ~70% делаем замену
-                    if (Math.random() < 0.7) {
-                        const variants = synonyms[key];
-                        const replacement = pick(variants);
-                        // Сохраняем регистр первой буквы
-                        result = result.replace(regex, (match) => {
-                            if (match[0] === match[0].toUpperCase()) {
-                                return replacement.charAt(0).toUpperCase() + replacement.slice(1);
-                            }
-                            return replacement;
-                        });
-                    }
+                if (regex.test(result) && Math.random() < 0.7) {
+                    const replacement = pick(synonyms[key]);
+                    result = result.replace(regex, (match) =>
+                        match[0] === match[0].toUpperCase()
+                            ? replacement.charAt(0).toUpperCase() + replacement.slice(1)
+                            : replacement
+                    );
                 }
             }
-
-            // 3. Небольшие структурные вариации (с небольшой вероятностью)
             if (Math.random() < 0.25) {
-                // Добавляем/убираем точку в конце
-                if (result.endsWith('.')) {
-                    if (Math.random() < 0.5) result = result.slice(0, -1);
-                } else if (Math.random() < 0.3) {
-                    result += '.';
-                }
+                if (result.endsWith('.') && Math.random() < 0.5) result = result.slice(0, -1);
+                else if (!result.endsWith('.') && Math.random() < 0.3) result += '.';
             }
-
-            // 4. Вариации начала предложения для некоторых паттернов
-            if (Math.random() < 0.3) {
-                if (result.startsWith('Во время ')) {
-                    const alts = ['В процессе ', 'При проведении ', 'Во время '];
-                    result = pick(alts) + result.slice(9);
-                } else if (result.startsWith('При ')) {
-                    const alts = ['Во время ', 'В процессе ', 'При '];
-                    result = pick(alts) + result.slice(4);
-                } else if (result.startsWith('На территории ')) {
-                    const alts = ['На территории ', 'В пределах территории ', 'На '];
-                    result = pick(alts) + result.slice(14);
-                }
-            }
-
             return result;
         }
 
-        // ===================== ОСНОВНАЯ ЛОГИКА =====================
-
+        // ===================== ЗАГРУЗКА =====================
         fetch('data.json')
             .then(r => {
                 if (!r.ok) throw new Error('Не удалось загрузить data.json');
@@ -339,24 +593,55 @@
                 data = json;
                 document.getElementById('genBtn').disabled = false;
                 document.getElementById('genBtn').textContent = 'Сгенерировать';
+                setFilter('safe');
             })
             .catch(err => {
-                document.getElementById('status').textContent = 'Ошибка: ' + err.message + '. Проверьте, что файл data.json лежит рядом с index.html';
+                document.getElementById('status').textContent = 'Ошибка: ' + err.message;
                 document.getElementById('status').classList.add('error');
                 document.getElementById('genBtn').textContent = 'Ошибка загрузки';
             });
 
         function generate() {
-            if (!data.length) return;
-            const item = data[Math.floor(Math.random() * data.length)];
+            const filtered = getFiltered();
+            if (!filtered.length) {
+                alert('Нет заявок для выбранного фильтра и текущего сезона.');
+                return;
+            }
+            const item = filtered[Math.floor(Math.random() * filtered.length)];
+            const danger = isDangerous(item.action);
 
-            document.getElementById('action').textContent = item.action || '—';
+            const actionEl = document.getElementById('action');
+            actionEl.textContent = item.action || '—';
+            actionEl.className = 'value ' + (danger ? 'danger' : 'highlight');
+
             document.getElementById('category').textContent = item.category || '—';
-
-            // Применяем вариации только к двум полям
             document.getElementById('description').textContent = rephrase(item.description || '—');
             document.getElementById('correction').textContent = rephrase(item.correction || '—');
 
+            // Наблюдали в отношении
+            const observed = item.observed_in_relation_to || item['observed in relation to'] || 'Группа компаний Технологии ОФС';
+            document.getElementById('observed').textContent = observed;
+
+            // Подрядная организация
+            const orgField = document.getElementById('orgField');
+            const org = (item.organization || '').trim();
+            if (observed.toLowerCase().includes('подрядн') && org) {
+                document.getElementById('organization').textContent = org;
+                orgField.classList.remove('hidden');
+            } else {
+                orgField.classList.add('hidden');
+            }
+
+            // Работы остановлены?
+            const stopField = document.getElementById('stopField');
+            if (danger) {
+                const stopVal = (item.Stop || item.stop || '').trim() || '—';
+                document.getElementById('stop').textContent = stopVal;
+                document.getElementById('stop').className = 'value ' + (stopVal.toLowerCase() === 'да' ? 'danger' : 'highlight');
+                stopField.classList.remove('hidden');
+            } else {
+                stopField.classList.add('hidden');
+            }
             document.getElementById('resultCard').classList.add('visible');
         }
 
@@ -374,17 +659,26 @@
         }
 
         function copyAll() {
-            const text =
-`Город наблюдения: г. Нефтеюганск
-Опасные/безопасные действия или условия: ${document.getElementById('action').textContent}
-Место наблюдения: Месторождение (Field)
-Наблюдали в отношении: Группа компаний Технологии ОФС
-Категория: ${document.getElementById('category').textContent}
-Выберите заказчика: ООО «РН-Юганскнефтегаз»
-Опишите наблюдение: ${document.getElementById('description').textContent}
-Корректирующие действия: ${document.getElementById('correction').textContent}`;
+            const orgField = document.getElementById('orgField');
+            const stopField = document.getElementById('stopField');
+            let lines = [
+                'Город наблюдения: г. Нефтеюганск',
+                'Опасные/безопасные действия или условия: ' + document.getElementById('action').textContent,
+                'Место наблюдения: Месторождение (Field)',
+                'Наблюдали в отношении: ' + document.getElementById('observed').textContent,
+            ];
+            if (!orgField.classList.contains('hidden')) {
+                lines.push('Подрядная организация: ' + document.getElementById('organization').textContent);
+            }
+            lines.push('Категория: ' + document.getElementById('category').textContent);
+            lines.push('Выберите заказчика: ООО «РН-Юганскнефтегаз»');
+            if (!stopField.classList.contains('hidden')) {
+                lines.push('Работы остановлены?: ' + document.getElementById('stop').textContent);
+            }
+            lines.push('Опишите наблюдение: ' + document.getElementById('description').textContent);
+            lines.push('Корректирующие действия: ' + document.getElementById('correction').textContent);
 
-            navigator.clipboard.writeText(text).then(() => {
+            navigator.clipboard.writeText(lines.join('\n')).then(() => {
                 const toast = document.getElementById('toast');
                 toast.classList.add('show');
                 setTimeout(() => toast.classList.remove('show'), 2000);
